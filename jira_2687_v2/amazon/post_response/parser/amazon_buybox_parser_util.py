@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-class AmazonBuyBoxParserUtil:
+class BuyBoxParserUtil:
     def __init__(self):
         pass
 
@@ -13,10 +13,8 @@ class AmazonBuyBoxParserUtil:
 
         # 查找购物车按钮
         btn_buy_now = soup.find('span', id='submit.buy-now-announce')
-
         btn_add_to_ubb_cart = soup.find('span', id='submit.add-to-cart-ubb-announce')
         btn_add_to_cart = soup.find('span', id='submit.add-to-cart-announce')
-
         # Set Up Now
         btn_setup_now = soup.find('button', id='rcx-subscribe-submit-button-announce')
 

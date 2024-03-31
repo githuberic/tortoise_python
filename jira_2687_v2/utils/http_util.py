@@ -1,10 +1,11 @@
 from fake_useragent import UserAgent
 import random
-import requests
+
 
 class HttpUtil:
     def __init__(self):
         pass
+
     @staticmethod
     def get_amz_pd_req_url_header(cookie, asin):
         # cookie = cookie.replace("lc-main=en_US","lc-main=zh_CN")
@@ -51,13 +52,3 @@ class HttpUtil:
         headers_amazon["upgrade-insecure-requests"] = "1"
 
         return headers_amazon
-
-    @staticmethod
-    def send_request(url, headers=None, proxy=None, timeout=None):
-        try:
-            response = requests.get(url, headers=headers, proxies=proxy, timeout=timeout)
-            return response.text
-        except requests.exceptions.RequestException as e:
-            error_message = f"Error : {e} \t Proxy: {proxy}"
-            raise (error_message)
-            return None

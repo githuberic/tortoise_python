@@ -3,10 +3,13 @@ import threading
 
 from multiprocessing.dummy import Pool as ThreadPool
 
+from jira_2687_v2.abuyun.http_proxy_abuyun import HttpProxyAbuyun
 from jira_2687_v2.utils.http_util import HttpUtil
-from jira_2687_v2.utils.amazon_buybox_parser_util import AmazonBuyBoxParserUtil
+from jira_2687_v2.utils.http_client import HttpClient
+from jira_2687_v2.amazon.post_response.parser.amazon_buybox_parser_util import BuyBoxParserUtil
 from jira_2687_v2.abuyun.logging_util import LoggingUtil
 from jira_2687_v2.utils.file_util import FileUtil
+from jira_2687_v2.amazon.pre_request.url_utils import URLUtil
 
 index = 0
 success_count = 0
@@ -18,28 +21,7 @@ lock = threading.Lock()
 BIZ_CODE = "abuyun"
 
 
-def get_proxy():
-    # 代理服务器
-    proxyHost = "http-dyn.abuyun.com"
-    proxyPort = "9020"
-
-    # 代理隧道验证信息
-    proxyUser = "HW1Q953296669L2D"
-    proxyPass = "822B0A8AC3A7CA2D"
-
-    url_proxy = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
-        "host": proxyHost,
-        "port": proxyPort,
-        "user": proxyUser,
-        "pass": proxyPass,
-    }
-
-    proxy_handler = {'http': url_proxy, 'https': url_proxy}
-
-    return proxy_handler
-
-
-def main_starter(arr_asin, arr_cookie):
+def main_starter(arr_asin, arr_cookie, proxy_handler):
     global success_count, failure_count, index, retry_count
 
     dict_asin_retry = {}
@@ -48,11 +30,11 @@ def main_starter(arr_asin, arr_cookie):
         dict_asin_retry[asin] = 0
 
         # Amazon url
-        url_amazon = f"https://www.amazon.com/dp/{asin}?th=1&psc=1"
+        url_amazon = URLUtil.get_product_detail_url(asin)
 
         # amazon url header
         cookie = random.choice(arr_cookie)
-        headers_amazon = HttpUtil.get_amz_pd_req_url_header(cookie,asin)
+        headers_amazon = HttpUtil.get_amz_pd_req_url_header(cookie, asin)
 
         # 购物车文本
         btn_buybox_text = None
@@ -62,14 +44,14 @@ def main_starter(arr_asin, arr_cookie):
         file_path = ""
         while retry_count < 3:
             # 请求amazon
-            response_text = HttpUtil.send_request(url_amazon, headers=headers_amazon, proxy=get_proxy(), timeout=60)
+            response_text = HttpClient.send_request(url_amazon, headers=headers_amazon, proxy=proxy_handler, timeout=60)
             with lock:
                 if response_text is not None:
                     # 原始文件保存
-                    file_path = FileUtil.write_content_to_file(BIZ_CODE,asin, response_text)
+                    file_path = FileUtil.write_content_to_file(BIZ_CODE, asin, response_text)
                     try:
                         # 解析amazon页面
-                        btn_buybox_text = AmazonBuyBoxParserUtil.parse_amazon_product_detail_buybox(response_text);
+                        btn_buybox_text = BuyBoxParserUtil.parse_amazon_product_detail_buybox(response_text);
                         if btn_buybox_text is not None:
                             success_count += 1
                             sucss_cur_thread = True
@@ -110,26 +92,27 @@ def main():
     arr_products = FileUtil.read_file_split_line_ret_arr(path_products)
     arr_cookies = FileUtil.read_file_split_line_ret_arr(path_cookies)
 
-    print(f"{len(arr_products)}>>>")
-    print(f"{len(arr_cookies)}>>>")
-
-    # 设定要启用的线程数量
-    num_threads = 5
-
     # 分割数组成多个子数组
     sub_products_arr = [arr_products[i:i + 10000] for i in range(0, len(arr_products), 10000)]
     sub_cookie_arr = [arr_cookies[i:i + 2000] for i in range(0, len(arr_cookies), 2000)]
 
+    # 初始化http代理
+    http_proxy = HttpProxyAbuyun();
+    proxy_handler = http_proxy.get_proxy();
+
     # 创建线程池并指定线程数
     with ThreadPool(5) as pool:
         # 提交任务给线程池处理
-        pool.starmap(main_starter, [(sub_products_arr[0], sub_cookie_arr[0]), (sub_products_arr[1], sub_cookie_arr[0]),
-                                    (sub_products_arr[2], sub_cookie_arr[1]), (sub_products_arr[3], sub_cookie_arr[1]),
-                                    (sub_products_arr[4], sub_cookie_arr[2]), (sub_products_arr[5], sub_cookie_arr[2]),
-                                    (sub_products_arr[6], sub_cookie_arr[3]), (sub_products_arr[7], sub_cookie_arr[3]),
-                                    (sub_products_arr[8], sub_cookie_arr[4]), (sub_products_arr[9], sub_cookie_arr[4])])
-        # pool.close()
-        # pool.join()
+        pool.starmap(main_starter, [(sub_products_arr[0], sub_cookie_arr[0], proxy_handler),
+                                    (sub_products_arr[1], sub_cookie_arr[0], proxy_handler),
+                                    (sub_products_arr[2], sub_cookie_arr[1], proxy_handler),
+                                    (sub_products_arr[3], sub_cookie_arr[1], proxy_handler),
+                                    (sub_products_arr[4], sub_cookie_arr[2], proxy_handler),
+                                    (sub_products_arr[5], sub_cookie_arr[2], proxy_handler),
+                                    (sub_products_arr[6], sub_cookie_arr[3], proxy_handler),
+                                    (sub_products_arr[7], sub_cookie_arr[3], proxy_handler),
+                                    (sub_products_arr[8], sub_cookie_arr[4], proxy_handler),
+                                    (sub_products_arr[9], sub_cookie_arr[4], proxy_handler)])
 
 
 if __name__ == "__main__":
