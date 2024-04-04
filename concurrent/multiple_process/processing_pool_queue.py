@@ -1,7 +1,5 @@
 import os
-import random
-import time
-from multiprocessing import Manager, Process, Queue, Pool
+from multiprocessing import Manager, Pool
 
 
 def write(q):
