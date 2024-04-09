@@ -26,6 +26,16 @@ def start_future_v1():
         for future in as_completed(futures):
             print(future.result())
 
+def say_hello_to_v2(name):
+    return f"Hi,{name}"
+
+
+def start_future_v2():
+    names = ['John', 'Ben', 'Bill', 'Alex', 'Jenny']
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        results = executor.map(say_hello_to_v2, names)
+        for r in results:
+            print(r)
 
 if __name__ == "__main__":
-    start_future_v1()
+    start_future_v2()
