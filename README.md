@@ -1,2 +1,3 @@
 # tortoise_python
-tortoise for python(日拱一卒)
+Tortoise for python
+Python 训练日拱一卒
