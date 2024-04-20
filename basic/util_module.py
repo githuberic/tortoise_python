@@ -1,7 +1,10 @@
 from datetime import datetime
+
+
 class UtilClass:
     def __init__(self):
         pass
+
     @staticmethod
     def my_static_method(param1, param2):
         # 静态方法的实现
