@@ -19,14 +19,13 @@ class Square(Shape):
 
 # 多态性的体现
 def draw_shape(shape):
-    return shape.draw()
+    print(shape.draw())
 
 
 def start():
-    circle = Circle()
-    square = Square()
-    print(draw_shape(circle))  # 输出: Drawing Circle
-    print(draw_shape(square))  # 输出: Drawing Square
+    shapes = [Circle(), Square()]
+    for shape in shapes:
+        draw_shape(shape)
 
 
 if __name__ == "__main__":
