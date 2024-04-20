@@ -19,10 +19,9 @@ def draw_shape(shape):
 
 
 def start():
-    circle = Circle()
-    square = Square()
-    print(draw_shape(circle))  # 输出: Drawing Circle
-    print(draw_shape(square))  # 输出: Drawing Square
+    shapes = [Circle(), Square()]
+    for shap in shapes:
+        print(draw_shape(shap))
 
 
 if __name__ == "__main__":
